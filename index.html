@@ -12,19 +12,23 @@
             flex-direction: column;
             justify-content: center;
             align-items: center;
-            background: linear-gradient(to right bottom, #ff6b6b, #ff8787);
-            font-family: Arial, sans-serif;
+            background: url('img/IMG_3327.jpg') no-repeat center center/cover;
+            font-family: 'Times New Roman', serif;
             overflow: hidden;
+            cursor: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path fill="%23ff0000" d="M12 4.248c-3.148-5.402-12-3.825-12 2.944 0 4.661 5.571 9.427 12 15.808 6.43-6.381 12-11.147 12-15.808 0-6.792-8.875-8.306-12-2.944z"/></svg>'), auto;
         }
 
         .container {
             text-align: center;
             padding: 20px;
+            background: rgba(255, 255, 255, 0.8);
+            border-radius: 15px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
         }
 
         h1 {
-            color: white;
-            font-size: 2.5rem;
+            color: #ff3366;
+            font-size: 3rem;
             text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
             margin-bottom: 30px;
         }
@@ -54,52 +58,86 @@
             background-color: #ff4444;
             color: white;
             position: absolute;
+            transition: all 0.3s ease;
         }
 
         .success-message {
             display: none;
-            color: white;
+            color: #ff3366;
             font-size: 2rem;
             margin-top: 20px;
             text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
         }
 
+        .heart {
+            position: absolute;
+            font-size: 24px;
+            animation: float 6s linear infinite;
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .confetti {
+            position: fixed;
+            width: 10px;
+            height: 10px;
+            animation: confetti-fall 3s linear;
+            pointer-events: none;
+        }
+
+        @keyframes float {
+            0% { transform: translateY(100vh) rotate(0deg); opacity: 1; }
+            100% { transform: translateY(-100vh) rotate(360deg); opacity: 0; }
+        }
+
+        @keyframes confetti-fall {
+            0% { transform: translateY(-100vh) rotate(0deg); }
+            100% { transform: translateY(100vh) rotate(720deg); }
+        }
+
         @media (max-width: 768px) {
-            h1 {
-                font-size: 2rem;
-            }
-            .btn {
-                padding: 12px 30px;
-                font-size: 1rem;
-            }
+            h1 { font-size: 2rem; }
+            .btn { padding: 12px 30px; font-size: 1rem; }
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>Will you be my Valentine? ❤️</h1>
+        <h1>Maayaa, will you be my Valentine? ❤️</h1>
         <button class="btn yes-btn" onclick="showSuccess()">YES</button>
         <button class="btn no-btn" onmouseover="moveButton()" ontouchstart="moveButton()">NO</button>
+        <div id="attemptCounter" style="color: #ff3366; margin-top: 10px;">Attempts: 0</div>
         <div class="success-message">
-            Yay! I love you! ❤️
+            <h2>I love youuuuuuuuu! ❤️</h2>
+            <p>Looking forward to our special day together!</p>
+            <p>Your Favorite Restaurant or Place</p>
         </div>
     </div>
 
+    <audio id="soundEffect" src="https://www.soundjay.com/human/heartbeat-01.mp3"></audio>
+
     <script>
         const noBtn = document.querySelector('.no-btn');
+        const noMessages = ["Nope!", "Try again!", "Not today!", "Can't catch me!", "Almost!", "So close!"];
+        let attemptCount = 0;
+        let moveDistance = 100;
         let isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
 
         function moveButton() {
+            attemptCount++;
+            document.getElementById('attemptCounter').textContent = `Attempts: ${attemptCount}`;
+            noBtn.textContent = noMessages[Math.floor(Math.random() * noMessages.length)];
+
             const maxX = window.innerWidth - noBtn.offsetWidth;
             const maxY = window.innerHeight - noBtn.offsetHeight;
-            
-            let newX = Math.floor(Math.random() * maxX);
-            let newY = Math.floor(Math.random() * maxY);
-            
-            // Ensure button stays visible by keeping it within viewport bounds
+            moveDistance += 20;
+
+            let newX = Math.random() * (maxX + moveDistance);
+            let newY = Math.random() * (maxY + moveDistance);
+
             newX = Math.max(0, Math.min(newX, maxX));
             newY = Math.max(0, Math.min(newY, maxY));
-            
+
             noBtn.style.left = newX + 'px';
             noBtn.style.top = newY + 'px';
         }
@@ -107,12 +145,38 @@
         function showSuccess() {
             document.querySelector('.success-message').style.display = 'block';
             noBtn.style.display = 'none';
+            document.getElementById('soundEffect').play();
+
+            for (let i = 0; i < 30; i++) {
+                createHearts();
+            }
+            createConfetti();
+        }
+
+        function createHearts() {
+            const heart = document.createElement('div');
+            heart.className = 'heart';
+            heart.innerHTML = '❤️';
+            heart.style.left = Math.random() * 100 + 'vw';
+            heart.style.animationDelay = Math.random() * 3 + 's';
+            document.body.appendChild(heart);
+        }
+
+        function createConfetti() {
+            for (let i = 0; i < 100; i++) {
+                const confetti = document.createElement('div');
+                confetti.className = 'confetti';
+                confetti.style.backgroundColor = `hsl(${Math.random() * 360}deg, 100%, 50%)`;
+                confetti.style.left = Math.random() * 100 + 'vw';
+                confetti.style.animation = `confetti-fall ${2 + Math.random() * 3}s linear`;
+                document.body.appendChild(confetti);
+            }
         }
 
         // Initial positioning of NO button
         moveButton();
 
-        // For mobile devices, handle touch events
+        // Mobile touch handling
         if (isMobile) {
             noBtn.addEventListener('touchstart', function(e) {
                 e.preventDefault();
