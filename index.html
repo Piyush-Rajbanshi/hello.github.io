@@ -7,12 +7,13 @@
     <style>
         body {
             margin: 0;
+            position: relative;
             height: 100vh;
             display: flex;
             flex-direction: column;
             justify-content: center;
             align-items: center;
-            background: url('img/IMG_3327.jpg') no-repeat center center/cover;
+            background: url('img/photo.jpg') no-repeat center center/cover;
             font-family: 'Times New Roman', serif;
             overflow: hidden;
             cursor: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path fill="%23ff0000" d="M12 4.248c-3.148-5.402-12-3.825-12 2.944 0 4.661 5.571 9.427 12 15.808 6.43-6.381 12-11.147 12-15.808 0-6.792-8.875-8.306-12-2.944z"/></svg>'), auto;
@@ -21,9 +22,11 @@
         .container {
             text-align: center;
             padding: 20px;
-            background: rgba(255, 255, 255, 0.8);
+            background: rgba(255, 255, 255, 0.9);
             border-radius: 15px;
             box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            position: relative;
+            z-index: 2;
         }
 
         h1 {
@@ -44,6 +47,15 @@
             box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
         }
 
+        .btn-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 20px; /* Adds space between buttons */
+            position: relative; /* Ensures NO button moves within this container */
+            flex-wrap: wrap;
+        }   
+
         .yes-btn {
             background-color: #4CAF50;
             color: white;
@@ -57,8 +69,11 @@
         .no-btn {
             background-color: #ff4444;
             color: white;
-            position: absolute;
-            transition: all 0.3s ease;
+            position: sticky;
+            z-index: 1;
+            pointer-events: auto;
+            transition: all 0.4s ease;
+            margin: 0 !important;
         }
 
         .success-message {
@@ -98,14 +113,17 @@
         @media (max-width: 768px) {
             h1 { font-size: 2rem; }
             .btn { padding: 12px 30px; font-size: 1rem; }
+            .btn-container { flex-direction: column; gap: 10px; }
         }
     </style>
 </head>
 <body>
     <div class="container">
         <h1>Maayaa, will you be my Valentine? ❤️</h1>
+        <div class="btn-container">
         <button class="btn yes-btn" onclick="showSuccess()">YES</button>
         <button class="btn no-btn" onmouseover="moveButton()" ontouchstart="moveButton()">NO</button>
+        </div>
         <div id="attemptCounter" style="color: #ff3366; margin-top: 10px;">Attempts: 0</div>
         <div class="success-message">
             <h2>I love youuuuuuuuu! ❤️</h2>
@@ -117,30 +135,57 @@
     <audio id="soundEffect" src="https://www.soundjay.com/human/heartbeat-01.mp3"></audio>
 
     <script>
-        const noBtn = document.querySelector('.no-btn');
+        const noBtn = document.querySelector(".no-btn");
         const noMessages = ["Nope!", "Try again!", "Not today!", "Can't catch me!", "Almost!", "So close!"];
         let attemptCount = 0;
         let moveDistance = 100;
         let isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
 
         function moveButton() {
-            attemptCount++;
-            document.getElementById('attemptCounter').textContent = `Attempts: ${attemptCount}`;
-            noBtn.textContent = noMessages[Math.floor(Math.random() * noMessages.length)];
+        attemptCount++;
+        document.getElementById('attemptCounter').textContent = `Attempts: ${attemptCount}`;
+        noBtn.textContent = noMessages[Math.floor(Math.random() * noMessages.length)];
 
-            const maxX = window.innerWidth - noBtn.offsetWidth;
-            const maxY = window.innerHeight - noBtn.offsetHeight;
-            moveDistance += 20;
+        const buttonWidth = noBtn.offsetWidth;
+        const buttonHeight = noBtn.offsetHeight;
+        const container = document.querySelector('.container').getBoundingClientRect();
+        
+        // Calculate safe area boundaries (20px from edges)
+        const maxX = window.innerWidth - buttonWidth - 20;
+        const maxY = window.innerHeight - buttonHeight - 20;
+        
+        // Calculate forbidden area (container position + buffer)
+        const forbiddenArea = {
+            left: container.left - buttonWidth - 20,
+            right: container.right + 20,
+            top: container.top - buttonHeight - 20,
+            bottom: container.bottom + 20
+        };
 
-            let newX = Math.random() * (maxX + moveDistance);
-            let newY = Math.random() * (maxY + moveDistance);
+        let newX, newY;
+        let isValidPosition = false;
+        
+        // Generate positions until valid
+        while (!isValidPosition) {
+            newX = Math.random() * (maxX - 20) + 20;
+            newY = Math.random() * (maxY - 20) + 20;
 
-            newX = Math.max(0, Math.min(newX, maxX));
-            newY = Math.max(0, Math.min(newY, maxY));
-
-            noBtn.style.left = newX + 'px';
-            noBtn.style.top = newY + 'px';
+            // Check if position overlaps with container
+            isValidPosition = !(
+                newX < forbiddenArea.right && 
+                newX + buttonWidth > forbiddenArea.left && 
+                newY < forbiddenArea.bottom && 
+                newY + buttonHeight > forbiddenArea.top
+            );
         }
+
+        noBtn.style.left = `${newX}px`;
+        noBtn.style.top = `${newY}px`;
+        }
+
+        // Add resize listener
+        window.addEventListener('resize', moveButton);
+        window.addEventListener('orientationchange', moveButton);
 
         function showSuccess() {
             document.querySelector('.success-message').style.display = 'block';
@@ -172,9 +217,6 @@
                 document.body.appendChild(confetti);
             }
         }
-
-        // Initial positioning of NO button
-        moveButton();
 
         // Mobile touch handling
         if (isMobile) {
